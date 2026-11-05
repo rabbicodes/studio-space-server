@@ -23,7 +23,8 @@ export async function connectToMongoDB() {
 
 const mongoClient = await connectToMongoDB()
 const db = mongoClient.db('studio-space')
-const studionCollection = db.collection('studios')
+const studioSCollection = db.collection('studios')
+const bookingsCollection = db.collection('bookings')
 
 app.post('/studio',async(req,res)=>{
     const data = req.body
@@ -33,15 +34,24 @@ app.post('/studio',async(req,res)=>{
 
 })
 app.get('/studios',async (req,res)=>{
-    const result = await studionCollection.find().toArray()
+    const result = await studioSCollection.find().toArray()
     res.send(result)
 })
 
 app.get('/studios/:id',async (req,res)=>{
     const{id}=req.params;
-    const result = await studionCollection.findOne({_id: new ObjectId(id)})
+    const result = await studioSCollection.findOne({_id: new ObjectId(id)})
     res.send(result)
 })
+
+app.post('/mybooking',async(req,res)=>{
+    const data = req.body
+    const result = await bookingsCollection.insertOne(data)
+    console.log(result);
+    res.send(result)
+
+})
+
 
 app.get('/',(req,res)=>{
     res.send({meassage:'server is running'})
