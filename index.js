@@ -28,7 +28,7 @@ const bookingsCollection = db.collection('bookings')
 
 app.post('/studio',async(req,res)=>{
     const data = req.body
-    const result = await studionCollection.insertOne(data)
+    const result = await studioSCollection.insertOne(data)
     console.log(result);
     res.send(result)
 
@@ -44,12 +44,60 @@ app.get('/studios/:id',async (req,res)=>{
     res.send(result)
 })
 
-app.post('/mybooking',async(req,res)=>{
-    const data = req.body
-    const result = await bookingsCollection.insertOne(data)
-    console.log(result);
-    res.send(result)
+app.post("/mybooking", async (req, res) => {
+  try {
+    const { data, studioId } = req.body;
 
+    const { date, startTime, endTime } = data || {};
+
+    // Required fields validation
+    if (!studioId || !date || !startTime || !endTime) {
+      return res.status(400).send({
+        message: "Please provide all booking information",
+      });
+    }
+
+    // Check valid time range
+    if (startTime >= endTime) {
+      return res.status(400).send({
+        message: "End time must be later than start time",
+      });
+    }
+
+    // Check existing booking with overlapping time
+    const existingBooking = await bookingsCollection.findOne({
+      studioId: studioId,
+      "data.date": date,
+      "data.startTime": { $lt: endTime },
+      "data.endTime": { $gt: startTime },
+      status: { $in: ["Pending", "Confirmed"] },
+    });
+
+    if (existingBooking) {
+      return res.status(409).send({
+        message: "This studio is already booked for the selected time. Please choose another time.",
+      });
+    }
+
+    // Save new booking
+    const result = await bookingsCollection.insertOne(req.body);
+
+    res.status(201).send({
+      message: "Booking submitted successfully",
+      result,
+    });
+
+  } catch (error) {
+    console.error("Booking Error:", error);
+
+    res.status(500).send({
+      message: "Failed to create booking",
+    });
+  }
+});
+app.get('/mybooking',async(req,res)=>{
+    const result = await bookingsCollection.find().toArray()
+    res.send(result)
 })
 
 
