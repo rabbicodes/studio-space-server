@@ -56,12 +56,7 @@ app.post("/mybooking", async (req, res) => {
       });
     }
 
-    // Check valid time range
-    if (startTime >= endTime) {
-      return res.status(400).send({
-        message: "End time must be later than start time",
-      });
-    }
+    
 
     // Check existing booking with overlapping time
     const existingBooking = await bookingsCollection.findOne({
@@ -100,7 +95,7 @@ app.get('/mybooking',async(req,res)=>{
 })
 
 
-app.patch('/mybooking/:id', async (req, res) => {
+app.patch('/mybooking/:id/status', async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
@@ -119,6 +114,42 @@ app.get('/mybooking/:email', async (req, res) => {
   res.send(result);
 });
 
+app.patch('/studios/:id',async (req,res)=>{
+   const {id}= req.params;
+   const data = req.body 
+  const result =  await studioSCollection.updateOne({_id: new ObjectId(id)},{$set:data})
+  res.send(result)
+  console.log(result);
+})
+
+app.delete('/studios/:id',async(req,res)=>{
+  const {id}=req.params
+  const result = await studioSCollection.deleteOne({_id: new ObjectId(id)})
+  res.send(result)
+})
+
+app.get('/featuredStudio',async(req,res)=>{
+  const result = await studioSCollection.find().limit(6).toArray()
+  res.send(result)
+})
+
+app.get('/studios/category/:category',async(req,res)=>{
+  const {category}= req.params
+  const result = await studioSCollection.find({category:category}).toArray()
+  res.send(result)
+
+})
+
+
+app.get("/studios/listing/:email", async (req, res) => {
+  const {email}=req.params;
+
+  const result = await studioSCollection
+    .find({ email: email })
+    .toArray();
+
+  res.send(result);
+});
 
 app.get('/',(req,res)=>{
     res.send({meassage:'server is running'})
