@@ -25,7 +25,6 @@ const mongoClient = await connectToMongoDB()
 const db = mongoClient.db('studio-space')
 const studioSCollection = db.collection('studios')
 const bookingsCollection = db.collection('bookings')
-
 app.post('/studio',async(req,res)=>{
     const data = req.body
     const result = await studioSCollection.insertOne(data)
@@ -51,7 +50,7 @@ app.post("/mybooking", async (req, res) => {
     const { date, startTime, endTime } = data || {};
 
     // Required fields validation
-    if (!studioId || !date || !startTime || !endTime) {
+    if ( !date || !startTime || !endTime) {
       return res.status(400).send({
         message: "Please provide all booking information",
       });
@@ -99,6 +98,19 @@ app.get('/mybooking',async(req,res)=>{
     const result = await bookingsCollection.find().toArray()
     res.send(result)
 })
+
+
+app.patch('/mybooking/:id', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  const result = await bookingsCollection.updateOne(
+    { _id: new ObjectId(id) },
+    { $set: { status: status } }
+  );
+
+  res.send(result);
+});
 
 
 app.get('/',(req,res)=>{
