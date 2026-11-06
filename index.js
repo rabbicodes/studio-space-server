@@ -112,6 +112,13 @@ app.patch('/mybooking/:id', async (req, res) => {
   res.send(result);
 });
 
+app.get('/mybooking/:email', async (req, res) => {
+  const { email} = req.params;
+     const result = await bookingsCollection.find({email:email}).toArray()
+
+  res.send(result);
+});
+
 
 app.get('/',(req,res)=>{
     res.send({meassage:'server is running'})
