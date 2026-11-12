@@ -34,7 +34,7 @@ const verifyToken=async(req,res,next)=>{
   }
   const token = authHeader.split(' ')[1]
   if(!token){
-    return res.status(401).send({message:'unauthrized'})
+    return res.status(401).send({message:'unauthrized vai'})
   }
   const JWKS = createRemoteJWKSet(new URL(`${process.env.CLIENT_URL}/api/auth/jwks`))
   try {
@@ -54,12 +54,12 @@ app.post('/studio',verifyToken,async(req,res)=>{
     res.send(result)
 
 })
-app.get('/studios',verifyToken,async (req,res)=>{
+app.get('/studios',async (req,res)=>{
     const result = await studioSCollection.find().toArray()
     res.send(result)
 })
 
-app.get('/studios/:id', verifyToken,async (req,res)=>{
+app.get('/studios/:id',async (req,res)=>{
     const{id}=req.params;
     const result = await studioSCollection.findOne({_id: new ObjectId(id)})
     res.send(result)
@@ -151,12 +151,12 @@ app.delete('/studios/:id',verifyToken,async(req,res)=>{
   res.send(result)
 })
 
-app.get('/featuredStudio',verifyToken,async(req,res)=>{
+app.get('/featuredStudio',async(req,res)=>{
   const result = await studioSCollection.find().limit(6).toArray()
   res.send(result)
 })
 
-app.get('/studios/category/:category',verifyToken,async(req,res)=>{
+app.get('/studios/category/:category',async(req,res)=>{
   const {category}= req.params
   const result = await studioSCollection.find({category:category}).toArray()
   res.send(result)
