@@ -7,6 +7,7 @@ app.use(cors())
 app.use(express.json())
 
 import { MongoClient, ObjectId } from 'mongodb';
+import { createRemoteJWKSet, jwtVerify } from 'jose';
 
 const client = new MongoClient(process.env.MONGODB_URL);
 
@@ -25,25 +26,46 @@ const mongoClient = await connectToMongoDB()
 const db = mongoClient.db('studio-space')
 const studioSCollection = db.collection('studios')
 const bookingsCollection = db.collection('bookings')
-app.post('/studio',async(req,res)=>{
+
+const verifyToken=async(req,res,next)=>{
+  const authHeader = req.headers.authorization
+  if(!authHeader){
+  return res.status(401).send({meassage:'unauthorized!'})
+  }
+  const token = authHeader.split(' ')[1]
+  if(!token){
+    return res.status(401).send({message:'unauthrized'})
+  }
+  const JWKS = createRemoteJWKSet(new URL('http://localhost:3000/api/auth/jwks'))
+  try {
+    const {payload}=await jwtVerify(token,JWKS)
+    
+  console.log(payload);
+    next()
+  } catch (error) {
+    return res.status(500).send({meassage:'Server error '})
+  }
+  
+}
+app.post('/studio',verifyToken,async(req,res)=>{
     const data = req.body
     const result = await studioSCollection.insertOne(data)
     console.log(result);
     res.send(result)
 
 })
-app.get('/studios',async (req,res)=>{
+app.get('/studios',verifyToken,async (req,res)=>{
     const result = await studioSCollection.find().toArray()
     res.send(result)
 })
 
-app.get('/studios/:id',async (req,res)=>{
+app.get('/studios/:id', verifyToken,async (req,res)=>{
     const{id}=req.params;
     const result = await studioSCollection.findOne({_id: new ObjectId(id)})
     res.send(result)
 })
 
-app.post("/mybooking", async (req, res) => {
+app.post("/mybooking", verifyToken,async (req, res) => {
   try {
     const { data, studioId } = req.body;
 
@@ -89,13 +111,13 @@ app.post("/mybooking", async (req, res) => {
     });
   }
 });
-app.get('/mybooking',async(req,res)=>{
+app.get('/mybooking',verifyToken,async(req,res)=>{
     const result = await bookingsCollection.find().toArray()
     res.send(result)
 })
 
 
-app.patch('/mybooking/:id/status', async (req, res) => {
+app.patch('/mybooking/:id/status',verifyToken, async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
@@ -107,33 +129,34 @@ app.patch('/mybooking/:id/status', async (req, res) => {
   res.send(result);
 });
 
-app.get('/mybooking/:email', async (req, res) => {
+app.get('/mybooking/:email',verifyToken, async (req, res) => {
   const { email} = req.params;
      const result = await bookingsCollection.find({email:email}).toArray()
 
   res.send(result);
 });
 
-app.patch('/studios/:id',async (req,res)=>{
+app.patch('/studios/:id',verifyToken,async (req,res)=>{
    const {id}= req.params;
+  
    const data = req.body 
   const result =  await studioSCollection.updateOne({_id: new ObjectId(id)},{$set:data})
   res.send(result)
   console.log(result);
 })
 
-app.delete('/studios/:id',async(req,res)=>{
+app.delete('/studios/:id',verifyToken,async(req,res)=>{
   const {id}=req.params
   const result = await studioSCollection.deleteOne({_id: new ObjectId(id)})
   res.send(result)
 })
 
-app.get('/featuredStudio',async(req,res)=>{
+app.get('/featuredStudio',verifyToken,async(req,res)=>{
   const result = await studioSCollection.find().limit(6).toArray()
   res.send(result)
 })
 
-app.get('/studios/category/:category',async(req,res)=>{
+app.get('/studios/category/:category',verifyToken,async(req,res)=>{
   const {category}= req.params
   const result = await studioSCollection.find({category:category}).toArray()
   res.send(result)
@@ -141,7 +164,7 @@ app.get('/studios/category/:category',async(req,res)=>{
 })
 
 
-app.get("/studios/listing/:email", async (req, res) => {
+app.get("/studios/listing/:email", verifyToken,async (req, res) => {
   const {email}=req.params;
 
   const result = await studioSCollection
