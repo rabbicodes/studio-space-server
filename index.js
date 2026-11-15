@@ -174,6 +174,8 @@ app.get("/studios/listing/:email", verifyToken,async (req, res) => {
   res.send(result);
 });
 
+
+
 app.get('/',(req,res)=>{
     res.send({meassage:'server is running'})
 })
