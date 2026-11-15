@@ -67,7 +67,7 @@ app.get('/studios/:id',async (req,res)=>{
 
 app.post("/mybooking", verifyToken,async (req, res) => {
   try {
-    const { data } = req.body;
+    const { data, studioId } = req.body;
 
     const { date, startTime, endTime } = data || {};
 
